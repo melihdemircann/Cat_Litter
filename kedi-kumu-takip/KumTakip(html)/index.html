@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amonyak Takip Sistemi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzJ_cVhxBPwOns8iuvkQ3V2S8uTRXc0BU",
+            authDomain: "koku-ace82.firebaseapp.com",
+            databaseURL: "https://koku-ace82-default-rtdb.firebaseio.com",
+            projectId: "koku-ace82",
+            storageBucket: "koku-ace82.firebaseapp.com",
+            messagingSenderId: "642615876703",
+            appId: "1:642615876703:web:1faa1676ac44b444d84fea"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const amonyakRef = ref(database, 'MQ135/Amonyak');
+        
+        onValue(amonyakRef, (snapshot) => {
+            const data = snapshot.val();
+            const amonyakValue = document.getElementById("amonyak-value");
+            const amonyakCard = document.getElementById("amonyak-card");
+            const statusIcon = document.getElementById("status-icon");
+            const statusText = document.getElementById("status-text");
+            const gauge = document.getElementById("gauge-fill");
+
+            // Değeri güncelle
+            amonyakValue.textContent = `${data}`;
+
+            // Gauge'i güncelle
+            const percentage = Math.min((Math.sqrt(data) / Math.sqrt(10000)) * 100, 100);
+            gauge.style.width = `${percentage}%`;
+
+            // Son güncelleme zamanını ayarla
+            const now = new Date();
+            document.getElementById("last-update").textContent = 
+                now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+            // Durum bilgisini güncelle
+            if (data < 300) {
+                amonyakCard.className = 'bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl shadow-lg transition-all duration-300';
+                gauge.className = 'h-full bg-green-500 rounded-full transition-all duration-300';
+                statusIcon.className = 'fas fa-check-circle text-green-500 text-2xl';
+                statusText.textContent = 'Güvenli Seviye';
+                statusText.className = 'text-green-600 font-medium';
+            } else if (data >= 300 && data < 500) {
+                amonyakCard.className = 'bg-gradient-to-br from-yellow-50 to-yellow-100 p-8 rounded-2xl shadow-lg transition-all duration-300';
+                gauge.className = 'h-full bg-yellow-500 rounded-full transition-all duration-300';
+                statusIcon.className = 'fas fa-exclamation-circle text-yellow-500 text-2xl';
+                statusText.textContent = 'Dikkat Seviyesi';
+                statusText.className = 'text-yellow-600 font-medium';
+            } else {
+                amonyakCard.className = 'bg-gradient-to-br from-red-50 to-red-100 p-8 rounded-2xl shadow-lg transition-all duration-300';
+                gauge.className = 'h-full bg-red-500 rounded-full transition-all duration-300';
+                statusIcon.className = 'fas fa-exclamation-triangle text-red-500 text-2xl';
+                statusText.textContent = 'Tehlikeli Seviye';
+                statusText.className = 'text-red-600 font-medium';
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen bg-cover bg-center" style="background-image: url('/background.jpg');">
+    <div class="container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-3">
+                    <i class="fas fa-flask-vial mr-2"></i>
+                    Amonyak Takip Sistemi
+                </h1>
+                <p class="text-gray-600 text-lg">Gerçek Zamanlı NH₃ Seviye Monitörü</p>
+            </header>
+
+            <!-- Main Card -->
+            <div id="amonyak-card" class="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl shadow-lg transition-all duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Gauge ve Değer -->
+                    <div class="flex flex-col justify-center">
+                        <div class="flex items-center space-x-3 mb-6">
+                            <i id="status-icon" class="fas fa-check-circle text-green-500 text-2xl"></i>
+                            <span id="status-text" class="text-green-600 font-medium">Güvenli Seviye</span>
+                        </div>
+                        <div class="text-6xl font-bold text-gray-800 mb-2">
+                            <span id="amonyak-value">0</span>
+                            <span class="text-3xl text-gray-600 ml-2">ppm</span>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            Son güncelleme: <span id="last-update" class="font-medium"></span>
+                        </p>
+                    </div>
+
+                    <!-- Gauge Bar -->
+                    <div class="flex flex-col justify-center">
+                        <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="gauge-fill" class="h-full bg-green-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-sm text-gray-600">
+                            <span>0 ppm</span>
+                            <span>300 ppm</span>
+                            <span>500 ppm</span>
+                            <span>∞ ppm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-green-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800">Güvenli Seviye</h3>
+                    </div>
+                    <p class="text-green-600 text-lg font-medium">0 - 300 ppm</p>
+                    <p class="text-sm text-gray-600 mt-2">Temiz</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-circle text-yellow-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800">Dikkat Seviyesi</h3>
+                    </div>
+                    <p class="text-yellow-600 text-lg font-medium">300 - 500 ppm</p>
+                    <p class="text-sm text-gray-600 mt-2">İdrar Yapılmış Olabilir</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800">İdrar Yapılmış</h3>
+                    </div>
+                    <p class="text-red-600 text-lg font-medium">> 500 ppm</p>
+                    <p class="text-sm text-gray-600 mt-2">Acil müdahale gerekli</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
